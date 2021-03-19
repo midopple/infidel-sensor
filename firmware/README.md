@@ -109,6 +109,26 @@ The Values are stored in the Epromm and will load from the Epromm at the next Po
  and the Sensor start with standard Settings
  
  
+## Calibration with Button (Standalone)
+
+Press the Button at Powerup for 3 sec, if the Calibrationmode start the LED flashes 10 times
+
+* Step 1, Led Flash 1 Times
+	*   Insert Drill with 1,4mm
+	*   Wait a short Time, 1-2 sec
+	*   Press the Button for 1sec
+	*   The Led light for 2 sec, the Sensor ist getting 100 Samples from the ADC 
+	*   If the messure is Ok the Led Flasches fast
+	*   Remove the drill an press the Button
+*   Step 2 Led flashes 2 Times (1,7mm Drill)
+    *   Insert the Drill 1,7mm and repeat Step 1
+*   Step 3, Led flash 3 times (2mm Drill)
+	*   Insert the Drill with 2mm and Repeat Step 1
+
+The Calibration is done
+
+
+ 
  ## Analog Output
  
  The Sensor send an Analog Signal to Pin 5 [OUT]
