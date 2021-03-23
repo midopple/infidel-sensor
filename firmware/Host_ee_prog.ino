@@ -13,7 +13,8 @@
 
 #define numtemps 6
 
-#define UART_OUT_SCOPE
+//Start with sening the Diameter Val, use with Serial Plotter in Arduino
+//#define UART_OUT_SCOPE
 
 #define SERIAL_BUFFER_SIZE 32
 
