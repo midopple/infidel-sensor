@@ -126,7 +126,7 @@ void loop() {
 
   //Calculate Voltage for Analog Out --> Volate = Diameter --> 1,73 V = 1,73 mm
   int help_dia_int = dia*1000;
-  aout_val = map(help_dia_int, 1420 , 2140, 0, 255);
+  aout_val = map(help_dia_int, 1437 , 2156, 0, 255);
   
   //Write Value to Analog Out
   analogWrite(A_OUT, (uint16_t)(aout_val));
