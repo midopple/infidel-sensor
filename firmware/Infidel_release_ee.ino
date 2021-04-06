@@ -125,11 +125,12 @@ void loop() {
   dia += (((float)convert2dia(in)/1000.0) - dia) / smooth;
 
   //Calculate Voltage for Analog Out --> Volate = Diameter --> 1,73 V = 1,73 mm
-  int help_dia_int = dia*1000;
-  aout_val = map(help_dia_int, 1437 , 2156, 0, 255);
+  int16_t help_dia_int = (int16_t)(dia*1000);
+  aout_val = map(help_dia_int, 1437, 2156, 0, 255);
+  aout_val = constrain(aout_val, 0, 255);
   
   //Write Value to Analog Out
-  analogWrite(A_OUT, (uint16_t)(aout_val));
+  analogWrite(A_OUT, (uint8_t)(aout_val));
 
   //light LED and pull up FAULT_IO_LED if sensor saturated, button pressed or diameter low
   if (in < 3 or dia < 1.5) {
