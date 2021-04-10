@@ -45,7 +45,7 @@ void setup() {
     //Check if the Device at Adress is Online
     check_I2C_adress();
    
-    Serial.println(F("Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Tabel Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val ):"));
+    Serial.println(F("Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val ):"));
   #endif
   
 }
@@ -97,7 +97,7 @@ void loop() {
       case 'h':
       case 'H':
         Serial.println(F("Commands:"));
-        Serial.println(F("Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Tabel Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val)"));
+        Serial.println(F("Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val)"));
       break;
       case 10:
       break;

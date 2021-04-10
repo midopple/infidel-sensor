@@ -59,7 +59,7 @@ Table [ADC] [DIA in um]:
 03: 0816 / 1401
 04: 0999 / 1001
 05: 1022 / 0001
-Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Tabel Val):
+Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val ):
 ```
 
 | Commands | Note |  Output |
@@ -69,7 +69,7 @@ Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Tabel V
 | 2 | Read the Version | Version: 1.11 |
 | 3 | Read the Diameter Table | Table [idx] [ADC] [DIA in um] |
 | 4 | Set the Value in the Table | Input values for Table [IDX],[ADC],[DIA um] like (1,619,2090) |
-| 5 | Ongoing reading the ADC rae Value, stop when the command 5 is send one more time |
+| 5 | Ongoing reading the ADC raw Value, stop when the command 5 is send one more time |
 | 6 | Read Meanvalue from Sensor (100 Samples), Display Min / Max / Mean / cnt, used it for Calibration |
 | h | show the Commandlist |
 
@@ -88,7 +88,7 @@ Input:
 ```
 
 Input this String --> 1,503,2000
-Means, Tabel Index 1 (Comnand "3"), ADC Val 503, Diameter 3
+Means, Table Index 1 (Comnand "3"), ADC Val 503, Diameter 3
 
 Repeat this for the next two Diameter (1,7mm, 1,4 mm) and write the Values to the Sensor
 
@@ -117,14 +117,14 @@ Press the Button at Powerup for 3 sec, if the Calibrationmode start the LED flas
 * Step 1, Led Flash 1 Times
 	*   Insert Drill with 1,4mm
 	*   Wait a short Time, 1-2 sec
-	*   Press the Button for 1sec
-	*   The Led light for 2 sec, the Sensor ist getting 100 Samples from the ADC 
-	*   If the messure is Ok the Led Flasches fast
+	*   Press the Button for 1 sec
+	*   The Led light for 2 sec, the Sensor is getting 100 Samples from the ADC 
+	*   If the messure is Ok the Led flash fast
 	*   Remove the drill an press the Button
 *   Step 2 Led flashes 2 Times (1,7mm Drill)
     *   Insert the Drill 1,7mm and repeat Step 1
 *   Step 3, Led flash 3 times (2mm Drill)
-	*   Insert the Drill with 2mm and Repeat Step 1
+	*   Insert the Drill with 2mm and repeat Step 1
 
 The Calibration is done
 
