@@ -60,7 +60,7 @@ Table [ADC] [DIA in um]:
 03: 0816 / 1401
 04: 0999 / 1001
 05: 1022 / 0001
-Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table Val / 5 - Ongoing raw read / 6 - sample Mean ADC Val ):
+Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table Val / 5 - Ongoing raw read):
 ```
 
 | Commands | Note |  Output |
@@ -71,7 +71,6 @@ Command Input (0 - val / 1 - RAW val / 2 - Version / 3 - Table / 4 - Set Table V
 | 3 | Read the Diameter Table | Table [idx] [ADC] [DIA in um] |
 | 4 | Set the Value in the Table | Input values for Table [IDX],[ADC],[DIA um] like (1,619,2090) |
 | 5 | Ongoing reading the ADC raw Value, stop when the command 5 is sent one more time | 
-| 6 | Read Meanvalue from Sensor (100 Samples), Display Min / Max / Mean / cnt, used it for Calibration |
 | h | Show the command list |
 
 ## Calibration
@@ -109,25 +108,6 @@ The values are stored in the EEPROM and will load from the EEPROM at the next po
 
 If you program the sensor with a new firmware over the ISP the EEPROM will be erased and the sensor will start with default settings.
  
-## Calibration with Button (Standalone)
-
-Press the Button at Powerup for 3 sec, if the Calibrationmode start the LED flashes 10 times
-The sensor sends an analog signal to Pin 5 [OUT].
-
-* Step 1, Led Flash 1 Times
-	*   Insert Drill with 1,4mm
-	*   Wait a short Time, 1-2 sec
-	*   Press the Button for 1 sec
-	*   The Led light for 2 sec, the Sensor is getting 100 Samples from the ADC 
-	*   If the messure is Ok the Led flash fast
-	*   Remove the drill an press the Button
-*   Step 2 Led flashes 2 Times (1,7mm Drill)
-    *   Insert the Drill 1,7mm and repeat Step 1
-*   Step 3, Led flash 3 times (2mm Drill)
-	*   Insert the Drill with 2mm and repeat Step 1
-
-The Calibration is done
-
 ## Analog Output
  
 The sensor sends an analog signal to Pin 5 [OUT].
