@@ -30,8 +30,8 @@
 
 #define numtemps 6    //Tablecount 
 
-#define VERSION_I2C 11  //I2C Protokoll Version
-#define MAIN_VERSION 2
+#define VERSION_I2C 12  //I2C Protokoll Version
+#define MAIN_VERSION 3
 
 #define EE_CHKSUM_ADR  8
 
@@ -39,6 +39,7 @@
 #define I2C_CMD_VAL 0
 #define I2C_CMD_RAWVAL 2
 #define I2C_CMD_MEANVAL 5
+#define I2C_CMD_OVERRIDE_DAC 7
 #define I2C_CMD_VER 121
 #define I2C_CMD_TABLE 131
 #define I2C_CMD_SET_TAB 132
@@ -57,6 +58,12 @@ uint8_t ADC_mean_cnt = 0;
 //Variables for EEPROM handling
 uint16_t ee_address = 0;
 uint8_t  ee_value;
+
+//Variables for Testing an Calibration DAC Output
+uint8_t DAC_override_active = 0;
+uint8_t DAC_override_value = 0;
+uint16_t DAC_min_out_voltage = 1437;  //DAC out at PWM 0 --> 1,437 V
+uint16_t DAC_max_out_voltage = 2156;  //DAC out at PWM 255 --> 2,156 V
 
 int16_t dia_table[numtemps][2] = {
   //{ADC reading in, diameter out [um]}
@@ -126,11 +133,14 @@ void loop() {
 
   //Calculate Voltage for Analog Out --> Volate = Diameter --> 1,73 V = 1,73 mm
   int16_t help_dia_int = (int16_t)(dia*1000);
-  aout_val = map(help_dia_int, 1437, 2156, 0, 255);
+  aout_val = map(help_dia_int, DAC_min_out_voltage, DAC_max_out_voltage, 0, 255);
   aout_val = constrain(aout_val, 0, 255);
   
   //Write Value to Analog Out
-  analogWrite(A_OUT, (uint8_t)(aout_val));
+  if(DAC_override_active)
+    analogWrite(A_OUT, (uint8_t)(DAC_override_value));
+  else
+    analogWrite(A_OUT, (uint8_t)(aout_val));
 
   //light LED and pull up FAULT_IO_LED if sensor saturated, button pressed or diameter low
   if (in < 3 or dia < 1.5) {
@@ -199,12 +209,29 @@ void requestISR() {
       TinyWireS.write(MAIN_VERSION);
       TinyWireS.write(VERSION_I2C);
     break;
-    // Send Table 24 byte
+    //Response that DAC Override is active
+    case I2C_CMD_OVERRIDE_DAC:
+       TinyWireS.write(DAC_override_active);
+    break;
+    // Send Table 24 byte + 4byte DAC cal. Values
     case I2C_CMD_TABLE:
-    tab_ptr = (byte*)&dia_table[0][0];
-    for(uint8_t cnt_i=0;cnt_i < (numtemps*4);cnt_i++){
-       TinyWireS.write(*tab_ptr++);
-    }
+      tab_ptr = (byte*)&dia_table[0][0];
+      for(uint8_t cnt_i=0;cnt_i < (numtemps*4);cnt_i++){
+         TinyWireS.write(*tab_ptr++);
+      }
+
+      b1 = floor(DAC_min_out_voltage / 256);
+      b2 = (DAC_min_out_voltage % 256);
+      b3 = floor(DAC_max_out_voltage / 256);
+      b4 = (DAC_max_out_voltage % 256);
+
+      TinyWireS.write(b1);
+      TinyWireS.write(b2);
+      TinyWireS.write(b3);
+      TinyWireS.write(b4);
+    break;
+    case I2C_CMD_SET_TAB:
+       TinyWireS.write(1);
     break;
   }
 }
@@ -220,25 +247,48 @@ void receiveISR(uint8_t num_bytes) {
     switch(i2c_read_cmd){
       case I2C_CMD_VAL:
         I2C_akt_cmd = I2C_CMD_VAL;
+        DAC_override_active = 0;
       break;
 
       case I2C_CMD_RAWVAL:
         I2C_akt_cmd = I2C_CMD_RAWVAL;
+        DAC_override_active = 0;
       break;
 
       case I2C_CMD_MEANVAL:
         I2C_akt_cmd = I2C_CMD_MEANVAL;
+        DAC_override_active = 0;
       break;
 
       case I2C_CMD_VER:
         I2C_akt_cmd = I2C_CMD_VER;
+        DAC_override_active = 0;
       break;
 
       case I2C_CMD_TABLE:
         I2C_akt_cmd = I2C_CMD_TABLE;
+        DAC_override_active = 0;
       break;
 
+      case I2C_CMD_OVERRIDE_DAC:
+
+        I2C_akt_cmd = I2C_CMD_OVERRIDE_DAC;
+        
+        b1 = TinyWireS.read();
+        b2 = TinyWireS.read();
+
+        if(b1 > 0) 
+          DAC_override_active = 1;
+        else
+          DAC_override_active = 0;
+
+        DAC_override_value = b2;
+
+      break;
       case I2C_CMD_SET_TAB:
+        
+        I2C_akt_cmd = I2C_CMD_SET_TAB;
+        
         uint8_t idx = TinyWireS.read();
         b1 = TinyWireS.read();
         b2 = TinyWireS.read();
@@ -251,6 +301,13 @@ void receiveISR(uint8_t num_bytes) {
           dia_table[idx][0] = adc_val_ee;
           dia_table[idx][1] = dia_val_ee;
         }
+
+        //Set the cal Values for Analog Out, min and max Value
+        if(idx == 9){
+          DAC_min_out_voltage = (uint16_t)b1 * 256 + b2;
+          DAC_max_out_voltage = (uint16_t)b3 * 256 + b4;
+        }
+        
         write_eeprom_tab();
       
       break;
@@ -287,6 +344,7 @@ int16_t convert2dia(int16_t in) {
 //read Values for Table from EEPROM (24 byte)
 void read_eeprom_tab(){
   uint8_t *tab_ptr;
+  uint8_t b1,b2,b3,b4;
 
   ee_address = 10;
 
@@ -297,6 +355,16 @@ void read_eeprom_tab(){
     *tab_ptr = ee_value;
     tab_ptr++;
   }
+
+  //Read the Calibartion Values for DAC
+  b1 = EEPROM.read(ee_address++);
+  b2 = EEPROM.read(ee_address++);
+  b3 = EEPROM.read(ee_address++);
+  b4 = EEPROM.read(ee_address++);
+
+  DAC_min_out_voltage = (uint16_t)b1 * 256 + b2;
+  DAC_max_out_voltage = (uint16_t)b3 * 256 + b4;
+
 }
 
 //Calculate Chksum from EEPROM
@@ -313,6 +381,13 @@ uint8_t  read_eeprom_chksum(){
     ee_address++;
   }
 
+  //Read the 4 byte for DAC values
+  for(uint8_t cnt_i=0;cnt_i < 4;cnt_i++){
+    ee_value = EEPROM.read(ee_address);
+    ee_chksum ^= ee_value;
+    ee_address++;
+  }
+
   if(ee_check == ee_chksum)
     return(true);
   else
@@ -323,6 +398,7 @@ uint8_t  read_eeprom_chksum(){
 void write_eeprom_tab(){
   byte *tab_ptr;
   uint8_t ee_chksum = 0;
+  uint8_t DAC_val_ee[4];
 
   ee_address = 10;
   
@@ -330,6 +406,18 @@ void write_eeprom_tab(){
   
   for(byte cnt_i=0;cnt_i < (numtemps*4);cnt_i++){
     ee_value = (*tab_ptr++);
+    ee_chksum ^= ee_value;
+    EEPROM.write(ee_address, ee_value);
+    ee_address++;
+  }
+
+  DAC_val_ee[0] = floor(DAC_min_out_voltage / 256);
+  DAC_val_ee[1] = (DAC_min_out_voltage % 256);
+  DAC_val_ee[2] = floor(DAC_max_out_voltage / 256);
+  DAC_val_ee[3] = (DAC_max_out_voltage % 256);
+  
+  for(byte cnt_i=0;cnt_i < 4;cnt_i++){
+    ee_value = DAC_val_ee[cnt_i];
     ee_chksum ^= ee_value;
     EEPROM.write(ee_address, ee_value);
     ee_address++;
